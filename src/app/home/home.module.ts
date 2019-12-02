@@ -5,9 +5,10 @@ import { HomeRoutingModule } from './home-routing.module';
 
 import { HomeComponent } from './home.component';
 import { SharedModule } from '../shared/shared.module';
+import { TimeSpanPipe } from '../shared/pipes/time-span.pipe';
 
 @NgModule({
-  declarations: [HomeComponent],
+  declarations: [HomeComponent, TimeSpanPipe],
   imports: [CommonModule, SharedModule, HomeRoutingModule]
 })
 export class HomeModule {}

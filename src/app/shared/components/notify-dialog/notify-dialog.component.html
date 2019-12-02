@@ -1,1 +1,8 @@
-<p>notify-dialog works!</p>
+<div class="block" role="alert">
+  <h1 mat-dialog-title>Time is up!</h1>
+  <mat-dialog-actions>
+    <button mat-button [mat-dialog-close]="'continue'">Continue</button>
+    <button mat-button [mat-dialog-close]="'next'">Next task</button>
+    <button mat-button [mat-dialog-close]="'break'">Take a break</button>
+  </mat-dialog-actions>
+</div>

@@ -13,6 +13,7 @@ module.exports = function (config) {
       require('@angular-devkit/build-angular/plugins/karma')
     ],
     client:{
+      useIframe: false,
       clearContext: false // leave Jasmine Spec Runner output visible in browser
     },
     coverageIstanbulReporter: {
@@ -25,10 +26,10 @@ module.exports = function (config) {
     colors: true,
     logLevel: config.LOG_INFO,
     autoWatch: true,
-    browsers: ['AngularElectron'],
+    browsers: ['Fibonado'],
     singleRun: true,
     customLaunchers: {
-      AngularElectron: {
+      Fibonado: {
         base: 'Electron',
         browserWindowOptions: {
           webPreferences: {
@@ -37,9 +38,6 @@ module.exports = function (config) {
           }
         }
       }
-    },
-    client: {
-      useIframe: false
     }
   });
 };

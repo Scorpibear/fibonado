@@ -1,7 +1,11 @@
 {
   "PAGES": {
       "HOME": {
-          "TITLE": "App works !"
+          "TITLE": "Fibonado",
+          "START": "Start",
+          "NEXT": "Next task",
+          "BREAK": "Take a break",
+          "TIMESPENT": "Time spent on the task"
       }
   }
 }

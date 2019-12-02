@@ -6,12 +6,12 @@ import { TranslateModule } from '@ngx-translate/core';
 import { PageNotFoundComponent } from './components/';
 import { WebviewDirective } from './directives/';
 import { FormsModule } from '@angular/forms';
-import { TimeSpanPipe } from './pipes/time-span.pipe';
 import { NotifyDialogComponent } from './components/notify-dialog/notify-dialog.component';
+import { MatDialogModule } from '@angular/material';
 
 @NgModule({
-  declarations: [PageNotFoundComponent, WebviewDirective, TimeSpanPipe, NotifyDialogComponent],
-  imports: [CommonModule, TranslateModule, FormsModule],
+  declarations: [PageNotFoundComponent, WebviewDirective, NotifyDialogComponent],
+  imports: [CommonModule, TranslateModule, FormsModule, MatDialogModule],
   exports: [TranslateModule, WebviewDirective, FormsModule]
 })
 export class SharedModule {}
