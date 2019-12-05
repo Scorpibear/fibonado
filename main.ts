@@ -10,17 +10,20 @@ function createWindow(): BrowserWindow {
 
   const electronScreen = screen;
   const size = electronScreen.getPrimaryDisplay().workAreaSize;
+  const windowSize = {width: 400, height: 280};
 
   // Create the browser window.
   win = new BrowserWindow({
-    x: 0,
-    y: 0,
-    width: size.width,
-    height: size.height,
+    x: size.width - windowSize.width,
+    y: 10 + size.height - windowSize.height,
+    width: windowSize.width,
+    height: windowSize.height,
     webPreferences: {
       nodeIntegration: true,
-      allowRunningInsecureContent: (serve) ? true : false,
+      allowRunningInsecureContent: serve,
     },
+    resizable: false,
+    frame: false
   });
 
   if (serve) {
@@ -37,7 +40,7 @@ function createWindow(): BrowserWindow {
   }
 
   if (serve) {
-    win.webContents.openDevTools();
+    // win.webContents.openDevTools();
   }
 
   // Emitted when the window is closed.
