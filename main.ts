@@ -10,7 +10,7 @@ function createWindow(): BrowserWindow {
 
   const electronScreen = screen;
   const size = electronScreen.getPrimaryDisplay().workAreaSize;
-  const windowSize = {width: 400, height: 280};
+  const windowSize = {width: 400, height: 200};
 
   // Create the browser window.
   win = new BrowserWindow({
@@ -23,7 +23,7 @@ function createWindow(): BrowserWindow {
       allowRunningInsecureContent: serve,
     },
     resizable: false,
-    frame: false
+    frame: serve
   });
 
   if (serve) {

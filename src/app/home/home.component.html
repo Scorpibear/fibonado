@@ -1,11 +1,9 @@
 <div class="container">
-  <h1 class="title">
-    {{ 'PAGES.HOME.TITLE' | translate }}
-  </h1>
   <div class="block" role="main">
-    <button *ngIf="!taskStarted" (click)="start()">{{ 'PAGES.HOME.START' | translate }}</button>
-    <button *ngIf="taskStarted" (click)="start()">{{ 'PAGES.HOME.NEXT' | translate }}</button>
-    <button *ngIf="isTimeToBreak()" (click)="break()">{{ 'PAGES.HOME.BREAK' | translate }}</button>
+    <button *ngIf="!taskStarted" (click)="start()" id="start">{{ 'PAGES.HOME.START' | translate }}</button>
+    <button *ngIf="taskStarted && periodFinished" (click)="nextPeriod()" id="continue">{{ 'PAGES.HOME.CONTINUE' | translate}}</button>
+    <button *ngIf="taskStarted" (click)="start()" id="next">{{ 'PAGES.HOME.NEXT' | translate }}</button>
+    <button *ngIf="isTimeToBreak()" (click)="break()" id="break">{{ 'PAGES.HOME.BREAK' | translate }}</button>
     <div>{{ 'PAGES.HOME.TIMESPENT' | translate }}: <span>{{ timeSpent | timeSpan }}</span></div>
   </div>
 </div>

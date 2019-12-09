@@ -1,6 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
-import { NotifyDialogComponent } from '../shared/components/notify-dialog/notify-dialog.component';
 
 @Component({
   selector: 'app-home',
@@ -17,7 +15,7 @@ export class HomeComponent implements OnInit {
   timerId: any;
   periodFinished = false;
   minBreakTime = 30 * 60 * 1000; 
-  constructor(public dialog: MatDialog) {
+  constructor() {
     
   }
 
@@ -43,11 +41,16 @@ export class HomeComponent implements OnInit {
     return this.getTime() * 1000 * (this.debug ? 1 : 60);
   }
 
-  start() {
+  reset() {
     if(this.timerId) {
       clearTimeout(this.timerId);
     }
     this.activePeriodIndex = 0;
+    this.taskStarted = null;
+  }
+
+  start() {
+    this.reset();
     this.taskStarted = Date.now();
     this.nextPeriod();
   }
@@ -56,25 +59,15 @@ export class HomeComponent implements OnInit {
     this.timerId = setTimeout(() => {
       this.activePeriodIndex++;
       this.periodFinished = true;
-      let dialogRef = this.dialog.open(NotifyDialogComponent, {
-        height: '200px',
-        width: '570px',
-        role: 'alertdialog',
-        disableClose: true
-      });
-      dialogRef.afterClosed().subscribe(result => {
-        switch(result) {
-          case 'continue': setTimeout(() => {
-            this.nextPeriod()}, 0); break;
-          case 'next': setTimeout(() => {
-            this.start()}, 0); break;
-          case 'break': console.error('not supported yet'); break;
-          default: console.error(`Unexpected dialog result returned: '${result}'`); break;
-        }
-      });
+      new Notification('Time is up!', {
+        body: "time is up"
+      })
     }, this.getTimeInMs());
   }
   isTimeToBreak() {
     return this.timeSpent >= this.minBreakTime;
+  }
+  break() {
+    this.reset();
   }
 }

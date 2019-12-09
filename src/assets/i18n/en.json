@@ -3,6 +3,7 @@
       "HOME": {
           "TITLE": "Fibonado",
           "START": "Start",
+          "CONTINUE": "Continue",
           "NEXT": "Next task",
           "BREAK": "Take a break",
           "TIMESPENT": "Time spent on the task"

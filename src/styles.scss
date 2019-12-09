@@ -5,3 +5,16 @@ html, body {
 
   height: 100%;
 }
+button {
+  border: none;
+  color: white;
+  padding: 12px 25px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 14px;
+}
+
+#start, #continue {background-color: #4CAF50;} /* Green */
+#next {background-color: #008CBA;} /* Blue */
+#break {background-color: #e7e7e7; color: black;} /* Gray */
