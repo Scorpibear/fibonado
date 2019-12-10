@@ -65,7 +65,7 @@ export class HomeComponent implements OnInit {
     }, this.getTimeInMs());
   }
   isTimeToBreak() {
-    return this.timeSpent >= this.minBreakTime;
+    return this.taskStarted && this.timeSpent >= this.minBreakTime;
   }
   break() {
     this.reset();
