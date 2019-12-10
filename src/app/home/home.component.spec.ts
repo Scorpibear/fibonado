@@ -25,10 +25,10 @@ describe('HomeComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should render title in a h1 tag', async(() => {
+  it('should display time spent lable', async(() => {
     const compiled = fixture.debugElement.nativeElement;
-    expect(compiled.querySelector('h1').textContent).toContain(
-      'PAGES.HOME.TITLE'
+    expect(compiled.querySelector('div').textContent).toContain(
+      'PAGES.HOME.TIMESPENT'
     );
   }));
 
