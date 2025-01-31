@@ -51,7 +51,7 @@ const isOnBreak = ref(false) // Flag to indicate if currently on a break
 const acceptableWorkTime = 2700
 
 // Debug mode flag
-const debugMode = true // Set to true to enable debug mode
+const debugMode = false // Set to true to enable debug mode
 
 // Define button configurations
 const actionButtons = [
