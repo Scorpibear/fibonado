@@ -22,7 +22,8 @@
     <div class="q-mt-md">
       <p>Total Time Spent: {{ formatTime(totalTime) }}</p>
       <p>Time Remaining: {{ formatTime(timeRemaining) }}</p>
-      <p>
+      <p v-if="isOnBreak">Time in Break: {{ formatTime(breakTime) }}</p>
+      <p v-else>
         Time to Deserved Break:
         {{ timeUntilDeservedBreak > 0 ? formatTime(timeUntilDeservedBreak) : 'Now!' }}
       </p>
@@ -45,9 +46,11 @@ const sessionDurations = [240, 420, 660, 1080] // Durations in seconds
 // New variable to track time until deserved break
 const timeUntilDeservedBreak = ref(0)
 let breakTimer = null // Timer for tracking time since last break
+const breakTime = ref(0) // Track time spent during breaks
+const isOnBreak = ref(false) // Flag to indicate if currently on a break
 
 // Debug mode flag
-const debugMode = false // Set to true to enable debug mode
+const debugMode = true // Set to true to enable debug mode
 
 // Define button configurations
 const actionButtons = [
@@ -59,7 +62,7 @@ const actionButtons = [
   {
     label: 'Start Another Task',
     color: 'blue',
-    handler: nextTask,
+    handler: startTask,
   },
 ]
 
@@ -83,7 +86,6 @@ function startTask() {
   timer.value = setInterval(
     () => {
       if (timeRemaining.value > 0) {
-        // Adjust for debug mode (4 minutes in 4 seconds)
         const elapsedSeconds = debugMode ? 6 : 1 // Use normal increment or accelerated
 
         timeRemaining.value -= elapsedSeconds
@@ -91,7 +93,7 @@ function startTask() {
 
         // Update the countdown for "Time to Deserved Break"
         if (timeUntilDeservedBreak.value > 0) {
-          timeUntilDeservedBreak.value-- // Decrease every second
+          timeUntilDeservedBreak.value -= elapsedSeconds
         }
       } else {
         clearInterval(timer.value)
@@ -117,12 +119,14 @@ function notifyEndOfPeriod() {
 
 function continueTask() {
   console.debug('Continuing task...')
+
   if (currentSessionIndex.value < sessionDurations.length - 1) {
     currentSessionIndex.value++
   }
 
   // Set remaining time to the next session duration
   timeRemaining.value = sessionDurations[currentSessionIndex.value]
+
   console.debug('Time remaining:', timeRemaining.value)
 
   clearInterval(timer.value)
@@ -141,7 +145,7 @@ function continueTask() {
 
         // Update the countdown for "Time to Deserved Break"
         if (timeUntilDeservedBreak.value > 0) {
-          timeUntilDeservedBreak.value-- // Decrease every second
+          timeUntilDeservedBreak.value -= elapsedSeconds
         }
       } else {
         clearInterval(timer.value)
@@ -151,10 +155,6 @@ function continueTask() {
     },
     debugMode ? 100 : 1000,
   ) // Run every second in debug mode too
-}
-
-function nextTask() {
-  resetTimer() // Reset to the first session duration
 }
 
 function takeBreak() {
@@ -169,12 +169,17 @@ function takeBreak() {
   }
 
   updateDeservedBreakTime(0) // Reset and start tracking from now
+
+  isOnBreak.value = true // Set flag indicating we are on a break
+
+  breakTimer = setInterval(() => {
+    breakTime.value++ // Increment every second while on break
+  }, 1000)
 }
 
 function updateDeservedBreakTime(elapsedSeconds) {
-  const totalDurationForNextBreak = 2700 // Set desired duration for breaks (45 minutes in seconds)
+  const totalDurationForNextBreak = 2700
 
-  // Calculate remaining time until next deserved break
   if (elapsedSeconds >= totalDurationForNextBreak) {
     timeUntilDeservedBreak.value = Math.max(0, totalDurationForNextBreak - elapsedSeconds)
     return
