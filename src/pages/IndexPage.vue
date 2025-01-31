@@ -46,6 +46,9 @@ const sessionDurations = [240, 420, 660, 1080] // Durations in seconds
 const timeUntilDeservedBreak = ref(0)
 let breakTimer = null // Timer for tracking time since last break
 
+// Debug mode flag
+const debugMode = true // Set to true to enable debug mode
+
 // Define button configurations
 const actionButtons = [
   {
@@ -77,21 +80,27 @@ onMounted(() => {
 function startTask() {
   resetTimer()
   isStarted.value = true // Task has started
-  timer.value = setInterval(() => {
-    if (timeRemaining.value > 0) {
-      timeRemaining.value--
-      totalTime.value++
+  timer.value = setInterval(
+    () => {
+      if (timeRemaining.value > 0) {
+        // Adjust for debug mode (4 minutes in 4 seconds)
+        const elapsedSeconds = debugMode ? 6 : 1 // Use normal increment or accelerated
 
-      // Update the countdown for "Time to Deserved Break"
-      if (timeUntilDeservedBreak.value > 0) {
-        timeUntilDeservedBreak.value-- // Decrease every second
+        timeRemaining.value -= elapsedSeconds
+        totalTime.value += elapsedSeconds
+
+        // Update the countdown for "Time to Deserved Break"
+        if (timeUntilDeservedBreak.value > 0) {
+          timeUntilDeservedBreak.value-- // Decrease every second
+        }
+      } else {
+        clearInterval(timer.value)
+        showContinueButton.value = true // Show continue button when time is up
+        notifyEndOfPeriod()
       }
-    } else {
-      clearInterval(timer.value)
-      showContinueButton.value = true // Show continue button when time is up
-      notifyEndOfPeriod()
-    }
-  }, 1000)
+    },
+    debugMode ? 100 : 1000,
+  ) // Run every second in debug mode too
 }
 
 function notifyEndOfPeriod() {
@@ -107,11 +116,13 @@ function notifyEndOfPeriod() {
 }
 
 function continueTask() {
+  console.debug('Continuing task...')
   if (currentSessionIndex.value < sessionDurations.length - 1) {
     currentSessionIndex.value++
 
     // Set remaining time to the next session duration
     timeRemaining.value = sessionDurations[currentSessionIndex.value]
+    console.debug('Time remaining:', timeRemaining.value)
 
     startTask() // Start the new session with updated remaining time
   }
