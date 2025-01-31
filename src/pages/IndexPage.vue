@@ -13,60 +13,74 @@
   </div>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      totalTime: 0,
-      timeRemaining: 240, // Start with 4 minutes in seconds
-      timer: null,
-      showContinueButton: false,
-      isStarted: false, // Track if the timer has started
-      currentSessionIndex: 0,
-      sessionDurations: [240, 420, 660, 1080], // Durations in seconds (4, 7, 11, and 18 minutes)
+<script setup>
+import { ref } from 'vue'
+import { Notify } from 'quasar'
+
+const totalTime = ref(0)
+const timeRemaining = ref(240) // Start with 4 minutes in seconds
+const timer = ref(null)
+const showContinueButton = ref(false)
+const isStarted = ref(false)
+const currentSessionIndex = ref(0)
+const sessionDurations = [240, 420, 660, 1080] // Durations in seconds
+
+function startTask() {
+  resetTimer()
+  isStarted.value = true // Hide the Start button
+  timer.value = setInterval(() => {
+    if (timeRemaining.value > 0) {
+      timeRemaining.value--
+      totalTime.value++
+    } else {
+      clearInterval(timer.value)
+      showContinueButton.value = true // Show continue button when time is up
+      notifyEndOfPeriod()
     }
-  },
-  methods: {
-    startTask() {
-      this.resetTimer()
-      this.isStarted = true // Hide the Start button
-      this.timer = setInterval(() => {
-        if (this.timeRemaining > 0) {
-          this.timeRemaining--
-          this.totalTime++
-        } else {
-          clearInterval(this.timer)
-          this.showContinueButton = true // Show continue button when time is up
-        }
-      }, 1000)
-    },
-    continueTask() {
-      if (this.currentSessionIndex < this.sessionDurations.length - 1) {
-        this.currentSessionIndex++
-        this.timeRemaining = this.sessionDurations[this.currentSessionIndex]
-        this.startTask()
-      }
-    },
-    nextTask() {
-      this.resetTimer() // Reset to the first session duration
-    },
-    takeBreak() {
-      clearInterval(this.timer)
-    },
-    resetTimer() {
-      this.totalTime = 0
-      this.currentSessionIndex = 0 // Reset to the first session
-      this.timeRemaining = this.sessionDurations[this.currentSessionIndex] // Reset to initial session time
-      clearInterval(this.timer)
-      this.showContinueButton = false // Hide continue button on reset
-      this.isStarted = false // Show Start button again
-    },
-    formatTime(seconds) {
-      const minutes = Math.floor(seconds / 60)
-      const secs = seconds % 60
-      return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
-    },
-  },
+  }, 1000)
+}
+
+function notifyEndOfPeriod() {
+  Notify.create({
+    message: 'Time is up! What would you like to do next?',
+    actions: [
+      { label: 'Continue', color: 'green', handler: continueTask },
+      { label: 'Take a Break', color: 'orange', handler: takeBreak },
+      { label: 'Start Another Task', color: 'blue', handler: nextTask },
+    ],
+    timeout: 0, // Keep notification until user interacts
+  })
+}
+
+function continueTask() {
+  if (currentSessionIndex.value < sessionDurations.length - 1) {
+    currentSessionIndex.value++
+    timeRemaining.value = sessionDurations[currentSessionIndex.value]
+    startTask()
+  }
+}
+
+function nextTask() {
+  resetTimer() // Reset to the first session duration
+}
+
+function takeBreak() {
+  clearInterval(timer.value)
+}
+
+function resetTimer() {
+  totalTime.value = 0
+  currentSessionIndex.value = 0 // Reset to the first session
+  timeRemaining.value = sessionDurations[currentSessionIndex.value] // Reset to initial session time
+  clearInterval(timer.value)
+  showContinueButton.value = false // Hide continue button on reset
+  isStarted.value = false // Show Start button again
+}
+
+function formatTime(seconds) {
+  const minutes = Math.floor(seconds / 60)
+  const secs = seconds % 60
+  return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
 }
 </script>
 
