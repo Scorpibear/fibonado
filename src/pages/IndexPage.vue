@@ -136,7 +136,7 @@ function takeBreak() {
 }
 
 function updateDeservedBreakTime(elapsedSeconds) {
-  const totalDurationForNextBreak = 900 // Set desired duration for breaks (15 minutes in seconds)
+  const totalDurationForNextBreak = 2700 // Set desired duration for breaks (45 minutes in seconds)
 
   // Calculate remaining time until next deserved break
   if (elapsedSeconds >= totalDurationForNextBreak) {
