@@ -138,8 +138,6 @@ function takeBreak() {
   clearNotification()
   clearInterval(timer.value)
 
-  localStorage.setItem('lastBreakTime', Date.now())
-
   if (breakTimer) {
     clearInterval(breakTimer)
   }
@@ -170,7 +168,10 @@ function resetTimer() {
   clearInterval(timer.value)
 
   showContinueButton.value = false // Hide continue button on reset
-  isOnBreak.value = false
+  if (isOnBreak.value) {
+    localStorage.setItem('lastBreakTime', Date.now())
+    isOnBreak.value = false
+  }
 
   if (breakTimer) {
     clearInterval(breakTimer)
