@@ -25,19 +25,19 @@
 import { ref } from 'vue'
 import EssentialLink from 'components/EssentialLink.vue'
 
-// Keep only essential links
+// Updated essential links
 const essentialLinks = [
   {
     title: 'Docs',
-    caption: 'quasar.dev',
+    caption: 'fibonado.com',
     icon: 'school',
-    link: 'https://quasar.dev',
+    link: 'https://fibonado.com/',
   },
   {
     title: 'Github',
-    caption: 'github.com/quasarframework',
+    caption: 'github.com/Scorpibear/fibonado',
     icon: 'code',
-    link: 'https://github.com/quasarframework',
+    link: 'https://github.com/Scorpibear/fibonado',
   },
 ]
 
@@ -47,3 +47,10 @@ function toggleLeftDrawer() {
   leftDrawerOpen.value = !leftDrawerOpen.value
 }
 </script>
+
+<style scoped>
+.q-pa-md {
+  max-width: 400px;
+  margin: auto;
+}
+</style>
