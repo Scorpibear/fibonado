@@ -1,6 +1,5 @@
 <template>
   <div class="q-pa-md">
-    <h2>Task Timer</h2>
     <div>
       <q-btn v-if="!isStarted" color="primary" label="Start" @click="startTask" />
       <q-btn v-if="showContinueButton" color="secondary" label="Continue" @click="continueTask" />
