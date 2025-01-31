@@ -12,13 +12,19 @@
           @click="button.handler"
         />
       </div>
-      <q-btn v-if="totalTime >= 2700" color="warning" label="Take a Break" @click="takeBreak" />
+      <q-btn
+        v-if="timeUntilDeservedBreak <= 0"
+        color="warning"
+        label="Take a Break"
+        @click="takeBreak"
+      />
     </div>
     <div class="q-mt-md">
       <p>Total Time Spent: {{ formatTime(totalTime) }}</p>
       <p>Time Remaining: {{ formatTime(timeRemaining) }}</p>
-      <p v-if="timeUntilDeservedBreak > 0">
-        Time to Deserved Break: {{ formatTime(timeUntilDeservedBreak) }}
+      <p>
+        Time to Deserved Break:
+        {{ timeUntilDeservedBreak > 0 ? formatTime(timeUntilDeservedBreak) : 'Now!' }}
       </p>
     </div>
   </div>
@@ -64,7 +70,7 @@ onMounted(() => {
   } else {
     // If no last break time exists, initialize it to the current time
     localStorage.setItem('lastBreakTime', Date.now())
-    timeUntilDeservedBreak.value = 900 // Set default to 15 minutes (900 seconds)
+    timeUntilDeservedBreak.value = 2700 // Set default to 45 minutes (2700 seconds)
   }
 })
 
