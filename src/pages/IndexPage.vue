@@ -12,8 +12,7 @@
           @click="button.handler"
         />
       </div>
-
-      <q-btn color="warning" label="Take a Break" @click="takeBreak" />
+      <q-btn v-if="totalTime >= 2700" color="warning" label="Take a Break" @click="takeBreak" />
     </div>
     <div class="q-mt-md">
       <p>Total Time Spent: {{ formatTime(totalTime) }}</p>
@@ -40,11 +39,6 @@ const actionButtons = [
     label: 'Continue',
     color: 'green',
     handler: continueTask,
-  },
-  {
-    label: 'Take a Break',
-    color: 'orange',
-    handler: takeBreak,
   },
   {
     label: 'Start Another Task',
