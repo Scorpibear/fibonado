@@ -1,19 +1,17 @@
 <template>
-  <q-page class="flex flex-center">
-    <div class="q-pa-md">
-      <h2>Task Timer</h2>
-      <div>
-        <q-btn color="primary" label="Start" @click="startTask" />
-        <q-btn color="secondary" label="Continue" @click="continueTask" />
-        <q-btn color="accent" label="Next" @click="nextTask" />
-        <q-btn color="warning" label="Break" @click="takeBreak" />
-      </div>
-      <div class="q-mt-md">
-        <p>Total Time Spent: {{ totalTime }} seconds</p>
-        <p>Time Remaining: {{ timeRemaining }} seconds</p>
-      </div>
+  <div class="q-pa-md">
+    <h2>Task Timer</h2>
+    <div>
+      <q-btn color="primary" label="Start" @click="startTask" />
+      <q-btn v-if="showContinueButton" color="secondary" label="Continue" @click="continueTask" />
+      <q-btn color="accent" label="Next" @click="nextTask" />
+      <q-btn color="warning" label="Break" @click="takeBreak" />
     </div>
-  </q-page>
+    <div class="q-mt-md">
+      <p>Total Time Spent: {{ formatTime(totalTime) }}</p>
+      <p>Time Remaining: {{ formatTime(timeRemaining) }}</p>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -21,8 +19,11 @@ export default {
   data() {
     return {
       totalTime: 0,
-      timeRemaining: 1500, // Example: 25 minutes in seconds
+      timeRemaining: 240, // Start with 4 minutes in seconds
       timer: null,
+      showContinueButton: false,
+      currentSessionIndex: 0,
+      sessionDurations: [240, 420, 660, 1080], // Durations in seconds (4, 7, 11, and 18 minutes)
     }
   },
   methods: {
@@ -34,25 +35,34 @@ export default {
           this.totalTime++
         } else {
           clearInterval(this.timer)
+          this.showContinueButton = true // Show continue button when time is up
         }
       }, 1000)
     },
     continueTask() {
-      // Logic to continue the task can be added here
-      this.startTask()
+      if (this.currentSessionIndex < this.sessionDurations.length - 1) {
+        this.currentSessionIndex++
+        this.timeRemaining = this.sessionDurations[this.currentSessionIndex]
+        this.startTask()
+      }
     },
     nextTask() {
-      // Logic for moving to the next task can be added here
       this.resetTimer()
     },
     takeBreak() {
-      // Logic for taking a break can be added here
       clearInterval(this.timer)
     },
     resetTimer() {
       this.totalTime = 0
-      this.timeRemaining = 1500 // Resetting to initial session time
+      this.currentSessionIndex = 0
+      this.timeRemaining = this.sessionDurations[this.currentSessionIndex] // Reset to initial session time
       clearInterval(this.timer)
+      this.showContinueButton = false // Hide continue button on reset
+    },
+    formatTime(seconds) {
+      const minutes = Math.floor(seconds / 60)
+      const secs = seconds % 60
+      return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
     },
   },
 }
