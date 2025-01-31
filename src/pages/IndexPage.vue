@@ -17,12 +17,15 @@
     <div class="q-mt-md">
       <p>Total Time Spent: {{ formatTime(totalTime) }}</p>
       <p>Time Remaining: {{ formatTime(timeRemaining) }}</p>
+      <p v-if="timeUntilDeservedBreak > 0">
+        Time to Deserved Break: {{ formatTime(timeUntilDeservedBreak) }}
+      </p>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { Notify } from 'quasar'
 
 const totalTime = ref(0)
@@ -32,6 +35,10 @@ const showContinueButton = ref(false)
 const isStarted = ref(false)
 const currentSessionIndex = ref(0)
 const sessionDurations = [240, 420, 660, 1080] // Durations in seconds
+
+// New variable to track time until deserved break
+const timeUntilDeservedBreak = ref(0)
+let breakTimer = null // Timer for tracking time since last break
 
 // Define button configurations
 const actionButtons = [
@@ -47,6 +54,20 @@ const actionButtons = [
   },
 ]
 
+// On component mount, check localStorage for last break time
+onMounted(() => {
+  const lastBreakTime = localStorage.getItem('lastBreakTime')
+
+  if (lastBreakTime) {
+    const elapsedTime = Math.floor((Date.now() - Number(lastBreakTime)) / 1000) // Calculate elapsed time in seconds
+    updateDeservedBreakTime(elapsedTime) // Update the time until deserved break based on elapsed time
+  } else {
+    // If no last break time exists, initialize it to the current time
+    localStorage.setItem('lastBreakTime', Date.now())
+    timeUntilDeservedBreak.value = 900 // Set default to 15 minutes (900 seconds)
+  }
+})
+
 function startTask() {
   resetTimer()
   isStarted.value = true // Task has started
@@ -54,6 +75,11 @@ function startTask() {
     if (timeRemaining.value > 0) {
       timeRemaining.value--
       totalTime.value++
+
+      // Update the countdown for "Time to Deserved Break"
+      if (timeUntilDeservedBreak.value > 0) {
+        timeUntilDeservedBreak.value-- // Decrease every second
+      }
     } else {
       clearInterval(timer.value)
       showContinueButton.value = true // Show continue button when time is up
@@ -88,6 +114,28 @@ function nextTask() {
 
 function takeBreak() {
   clearInterval(timer.value)
+
+  // Store the current timestamp in localStorage when taking a break
+  localStorage.setItem('lastBreakTime', Date.now())
+
+  // Reset and start tracking time until next deserved break
+  if (breakTimer) {
+    clearInterval(breakTimer)
+  }
+
+  updateDeservedBreakTime(0) // Reset and start tracking from now
+}
+
+function updateDeservedBreakTime(elapsedSeconds) {
+  const totalDurationForNextBreak = 900 // Set desired duration for breaks (15 minutes in seconds)
+
+  // Calculate remaining time until next deserved break
+  if (elapsedSeconds >= totalDurationForNextBreak) {
+    timeUntilDeservedBreak.value = Math.max(0, totalDurationForNextBreak - elapsedSeconds)
+    return
+  }
+
+  timeUntilDeservedBreak.value = totalDurationForNextBreak - elapsedSeconds
 }
 
 function resetTimer() {
@@ -95,8 +143,16 @@ function resetTimer() {
   currentSessionIndex.value = 0 // Reset to the first session
   timeRemaining.value = sessionDurations[currentSessionIndex.value] // Reset to initial session time
   clearInterval(timer.value)
+
   showContinueButton.value = false // Hide continue button on reset
   isStarted.value = false // Show Start button again if needed
+
+  // Clear break timer when resetting
+  if (breakTimer) {
+    clearInterval(breakTimer)
+    breakTimer = null // Reset break timer reference
+    timeUntilDeservedBreak.value = Math.max(0, timeUntilDeservedBreak.value) // Ensure it doesn't go negative on reset.
+  }
 }
 
 function formatTime(seconds) {
