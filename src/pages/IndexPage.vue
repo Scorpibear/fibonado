@@ -2,7 +2,17 @@
   <div class="q-pa-md">
     <div>
       <q-btn v-if="!isStarted" color="primary" label="Start" @click="startTask" />
-      <q-btn v-if="showContinueButton" color="secondary" label="Continue" @click="continueTask" />
+
+      <div v-if="showContinueButton">
+        <q-btn
+          v-for="(button, index) in actionButtons"
+          :key="index"
+          :color="button.color"
+          :label="button.label"
+          @click="button.handler"
+        />
+      </div>
+
       <q-btn color="accent" label="Next" @click="nextTask" />
       <q-btn color="warning" label="Break" @click="takeBreak" />
     </div>
@@ -25,6 +35,25 @@ const isStarted = ref(false)
 const currentSessionIndex = ref(0)
 const sessionDurations = [240, 420, 660, 1080] // Durations in seconds
 
+// Define button configurations
+const actionButtons = [
+  {
+    label: 'Continue',
+    color: 'green',
+    handler: continueTask,
+  },
+  {
+    label: 'Take a Break',
+    color: 'orange',
+    handler: takeBreak,
+  },
+  {
+    label: 'Start Another Task',
+    color: 'blue',
+    handler: nextTask,
+  },
+]
+
 function startTask() {
   resetTimer()
   isStarted.value = true // Hide the Start button
@@ -43,11 +72,11 @@ function startTask() {
 function notifyEndOfPeriod() {
   Notify.create({
     message: 'Time is up! What would you like to do next?',
-    actions: [
-      { label: 'Continue', color: 'green', handler: continueTask },
-      { label: 'Take a Break', color: 'orange', handler: takeBreak },
-      { label: 'Start Another Task', color: 'blue', handler: nextTask },
-    ],
+    actions: actionButtons.map((button) => ({
+      label: button.label,
+      color: button.color,
+      handler: button.handler,
+    })),
     timeout: 0, // Keep notification until user interacts
   })
 }
