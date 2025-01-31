@@ -103,8 +103,11 @@ function notifyEndOfPeriod() {
 function continueTask() {
   if (currentSessionIndex.value < sessionDurations.length - 1) {
     currentSessionIndex.value++
+
+    // Set remaining time to the next session duration
     timeRemaining.value = sessionDurations[currentSessionIndex.value]
-    startTask()
+
+    startTask() // Start the new session with updated remaining time
   }
 }
 
