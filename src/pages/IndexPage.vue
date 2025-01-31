@@ -1,8 +1,6 @@
 <template>
   <div class="q-pa-md">
     <div>
-      <q-btn color="primary" label="Start Another Task" @click="startTask" />
-
       <div v-if="showContinueButton">
         <q-btn
           v-for="(button, index) in actionButtons"
@@ -11,6 +9,9 @@
           :label="button.label"
           @click="button.handler"
         />
+      </div>
+      <div v-else>
+        <q-btn color="primary" label="Start Another Task" @click="startTask" />
       </div>
       <q-btn
         v-if="timeUntilDeservedBreak <= 0"
@@ -39,7 +40,6 @@ const totalTime = ref(0)
 const timeRemaining = ref(240) // Start with 4 minutes in seconds
 const timer = ref(null)
 const showContinueButton = ref(false)
-const isStarted = ref(false)
 const currentSessionIndex = ref(0)
 const sessionDurations = [240, 420, 660, 1080] // Durations in seconds
 
@@ -48,6 +48,7 @@ const timeUntilDeservedBreak = ref(0)
 let breakTimer = null // Timer for tracking time since last break
 const breakTime = ref(0) // Track time spent during breaks
 const isOnBreak = ref(false) // Flag to indicate if currently on a break
+const acceptableWorkTime = 2700
 
 // Debug mode flag
 const debugMode = true // Set to true to enable debug mode
@@ -61,10 +62,12 @@ const actionButtons = [
   },
   {
     label: 'Start Another Task',
-    color: 'blue',
+    color: 'primary',
     handler: startTask,
   },
 ]
+
+let clearNotification = () => {}
 
 // On component mount, check localStorage for last break time
 onMounted(() => {
@@ -74,19 +77,33 @@ onMounted(() => {
     const elapsedTime = Math.floor((Date.now() - Number(lastBreakTime)) / 1000) // Calculate elapsed time in seconds
     updateDeservedBreakTime(elapsedTime) // Update the time until deserved break based on elapsed time
   } else {
-    // If no last break time exists, initialize it to the current time
     localStorage.setItem('lastBreakTime', Date.now())
     timeUntilDeservedBreak.value = 2700 // Set default to 45 minutes (2700 seconds)
   }
 })
 
 function startTask() {
+  clearNotification()
   resetTimer()
-  isStarted.value = true // Task has started
+  startTimer(sessionDurations[currentSessionIndex.value])
+}
+
+function continueTask() {
+  clearNotification()
+  if (currentSessionIndex.value < sessionDurations.length - 1) {
+    currentSessionIndex.value++
+  }
+  timeRemaining.value = sessionDurations[currentSessionIndex.value]
+  clearInterval(timer.value)
+  showContinueButton.value = false // Hide continue button on reset
+  startTimer(timeRemaining.value)
+}
+
+function startTimer() {
   timer.value = setInterval(
     () => {
       if (timeRemaining.value > 0) {
-        const elapsedSeconds = debugMode ? 6 : 1 // Use normal increment or accelerated
+        const elapsedSeconds = debugMode ? 6 * (currentSessionIndex.value + 1) : 1 // Adjust for debug mode
 
         timeRemaining.value -= elapsedSeconds
         totalTime.value += elapsedSeconds
@@ -106,7 +123,7 @@ function startTask() {
 }
 
 function notifyEndOfPeriod() {
-  Notify.create({
+  clearNotification = Notify.create({
     message: 'Time is up! What would you like to do next?',
     actions: actionButtons.map((button) => ({
       label: button.label,
@@ -117,60 +134,20 @@ function notifyEndOfPeriod() {
   })
 }
 
-function continueTask() {
-  console.debug('Continuing task...')
-
-  if (currentSessionIndex.value < sessionDurations.length - 1) {
-    currentSessionIndex.value++
-  }
-
-  // Set remaining time to the next session duration
-  timeRemaining.value = sessionDurations[currentSessionIndex.value]
-
-  console.debug('Time remaining:', timeRemaining.value)
-
-  clearInterval(timer.value)
-
-  showContinueButton.value = false // Hide continue button on reset
-
-  isStarted.value = true // Task has started
-  timer.value = setInterval(
-    () => {
-      if (timeRemaining.value > 0) {
-        // Adjust for debug mode (4 minutes in 4 seconds)
-        const elapsedSeconds = debugMode ? 6 * (currentSessionIndex.value + 1) : 1 // Use normal increment or accelerated
-
-        timeRemaining.value -= elapsedSeconds
-        totalTime.value += elapsedSeconds
-
-        // Update the countdown for "Time to Deserved Break"
-        if (timeUntilDeservedBreak.value > 0) {
-          timeUntilDeservedBreak.value -= elapsedSeconds
-        }
-      } else {
-        clearInterval(timer.value)
-        showContinueButton.value = true // Show continue button when time is up
-        notifyEndOfPeriod()
-      }
-    },
-    debugMode ? 100 : 1000,
-  ) // Run every second in debug mode too
-}
-
 function takeBreak() {
+  clearNotification()
   clearInterval(timer.value)
 
-  // Store the current timestamp in localStorage when taking a break
   localStorage.setItem('lastBreakTime', Date.now())
 
-  // Reset and start tracking time until next deserved break
   if (breakTimer) {
     clearInterval(breakTimer)
   }
 
-  updateDeservedBreakTime(0) // Reset and start tracking from now
+  updateDeservedBreakTime(0)
 
-  isOnBreak.value = true // Set flag indicating we are on a break
+  isOnBreak.value = true
+  showContinueButton.value = false
 
   breakTimer = setInterval(() => {
     breakTime.value++ // Increment every second while on break
@@ -178,14 +155,12 @@ function takeBreak() {
 }
 
 function updateDeservedBreakTime(elapsedSeconds) {
-  const totalDurationForNextBreak = 2700
-
-  if (elapsedSeconds >= totalDurationForNextBreak) {
-    timeUntilDeservedBreak.value = Math.max(0, totalDurationForNextBreak - elapsedSeconds)
+  if (elapsedSeconds >= acceptableWorkTime) {
+    timeUntilDeservedBreak.value = Math.max(0, acceptableWorkTime - elapsedSeconds)
     return
   }
 
-  timeUntilDeservedBreak.value = totalDurationForNextBreak - elapsedSeconds
+  timeUntilDeservedBreak.value = acceptableWorkTime - elapsedSeconds
 }
 
 function resetTimer() {
@@ -195,13 +170,12 @@ function resetTimer() {
   clearInterval(timer.value)
 
   showContinueButton.value = false // Hide continue button on reset
-  isStarted.value = false // Show Start button again if needed
+  isOnBreak.value = false
 
-  // Clear break timer when resetting
   if (breakTimer) {
     clearInterval(breakTimer)
-    breakTimer = null // Reset break timer reference
-    timeUntilDeservedBreak.value = Math.max(0, timeUntilDeservedBreak.value) // Ensure it doesn't go negative on reset.
+    breakTimer = null
+    timeUntilDeservedBreak.value = acceptableWorkTime
   }
 }
 
