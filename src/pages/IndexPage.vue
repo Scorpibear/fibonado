@@ -47,7 +47,7 @@ const timeUntilDeservedBreak = ref(0)
 let breakTimer = null // Timer for tracking time since last break
 
 // Debug mode flag
-const debugMode = true // Set to true to enable debug mode
+const debugMode = false // Set to true to enable debug mode
 
 // Define button configurations
 const actionButtons = [
@@ -119,13 +119,38 @@ function continueTask() {
   console.debug('Continuing task...')
   if (currentSessionIndex.value < sessionDurations.length - 1) {
     currentSessionIndex.value++
-
-    // Set remaining time to the next session duration
-    timeRemaining.value = sessionDurations[currentSessionIndex.value]
-    console.debug('Time remaining:', timeRemaining.value)
-
-    startTask() // Start the new session with updated remaining time
   }
+
+  // Set remaining time to the next session duration
+  timeRemaining.value = sessionDurations[currentSessionIndex.value]
+  console.debug('Time remaining:', timeRemaining.value)
+
+  clearInterval(timer.value)
+
+  showContinueButton.value = false // Hide continue button on reset
+
+  isStarted.value = true // Task has started
+  timer.value = setInterval(
+    () => {
+      if (timeRemaining.value > 0) {
+        // Adjust for debug mode (4 minutes in 4 seconds)
+        const elapsedSeconds = debugMode ? 6 * (currentSessionIndex.value + 1) : 1 // Use normal increment or accelerated
+
+        timeRemaining.value -= elapsedSeconds
+        totalTime.value += elapsedSeconds
+
+        // Update the countdown for "Time to Deserved Break"
+        if (timeUntilDeservedBreak.value > 0) {
+          timeUntilDeservedBreak.value-- // Decrease every second
+        }
+      } else {
+        clearInterval(timer.value)
+        showContinueButton.value = true // Show continue button when time is up
+        notifyEndOfPeriod()
+      }
+    },
+    debugMode ? 100 : 1000,
+  ) // Run every second in debug mode too
 }
 
 function nextTask() {
