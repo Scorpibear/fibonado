@@ -1,7 +1,7 @@
 <template>
   <div class="q-pa-md">
     <div>
-      <q-btn v-if="!isStarted" color="primary" label="Start" @click="startTask" />
+      <q-btn color="primary" label="Start Another Task" @click="startTask" />
 
       <div v-if="showContinueButton">
         <q-btn
@@ -13,8 +13,7 @@
         />
       </div>
 
-      <q-btn color="accent" label="Next" @click="nextTask" />
-      <q-btn color="warning" label="Break" @click="takeBreak" />
+      <q-btn color="warning" label="Take a Break" @click="takeBreak" />
     </div>
     <div class="q-mt-md">
       <p>Total Time Spent: {{ formatTime(totalTime) }}</p>
@@ -56,7 +55,7 @@ const actionButtons = [
 
 function startTask() {
   resetTimer()
-  isStarted.value = true // Hide the Start button
+  isStarted.value = true // Task has started
   timer.value = setInterval(() => {
     if (timeRemaining.value > 0) {
       timeRemaining.value--
@@ -103,7 +102,7 @@ function resetTimer() {
   timeRemaining.value = sessionDurations[currentSessionIndex.value] // Reset to initial session time
   clearInterval(timer.value)
   showContinueButton.value = false // Hide continue button on reset
-  isStarted.value = false // Show Start button again
+  isStarted.value = false // Show Start button again if needed
 }
 
 function formatTime(seconds) {
