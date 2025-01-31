@@ -4,7 +4,7 @@
       <q-toolbar>
         <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
         <q-toolbar-title> Fibonado </q-toolbar-title>
-        <div>Fibonado v{{ $q.version }}</div>
+        <div>Fibonado v{{ productVersion }}</div>
       </q-toolbar>
     </q-header>
 
@@ -23,9 +23,11 @@
 
 <script setup>
 import { ref } from 'vue'
+import packageInfo from '../../package.json' // Adjust the path based on your file structure
 import EssentialLink from 'components/EssentialLink.vue'
 
-// Updated essential links
+const productVersion = ref(packageInfo.version) // Accessing the version from package.json
+
 const essentialLinks = [
   {
     title: 'Docs',
