@@ -24,10 +24,10 @@
       <p>Total Time Spent: {{ formatTime(totalTime) }}</p>
       <p>Time Remaining: {{ formatTime(timeRemaining) }}</p>
       <p v-if="isOnBreak">Time in Break: {{ formatTime(breakTime) }}</p>
-      <p v-else>
+      <!--p v-else>
         Time to Deserved Break:
         {{ timeUntilDeservedBreak > 0 ? formatTime(timeUntilDeservedBreak) : 'Now!' }}
-      </p>
+      </p-->
     </div>
   </div>
 </template>

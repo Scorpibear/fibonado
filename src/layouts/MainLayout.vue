@@ -4,7 +4,7 @@
       <q-toolbar>
         <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
         <q-toolbar-title> Fibonado </q-toolbar-title>
-        <div>Fibonado v{{ productVersion }}</div>
+        <div>v{{ productVersion }}</div>
       </q-toolbar>
     </q-header>
 
