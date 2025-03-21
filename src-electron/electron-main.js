@@ -17,7 +17,7 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     icon: path.resolve(currentDir, 'icons/icon.png'), // tray icon
     width: 250,
-    height: 300,
+    height: 360,
     useContentSize: true,
     webPreferences: {
       contextIsolation: true,
@@ -31,6 +31,8 @@ function createWindow() {
       ),
     },
   })
+
+  mainWindow.setMenu(null)
 
   if (process.env.DEV) {
     mainWindow.loadURL(process.env.APP_URL)
