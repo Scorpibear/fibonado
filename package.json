@@ -1,6 +1,6 @@
 {
   "name": "fibonado",
-  "version": "0.1.0",
+  "version": "0.2.2",
   "description": "Time-management tool which allow to quickly start with the task or project of any complexity independently of current energy level",
   "productName": "Fibonado",
   "author": "Mikhail Subach <mikhail_subach@epam.com>",

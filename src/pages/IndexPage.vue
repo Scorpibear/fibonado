@@ -1,22 +1,11 @@
 <template>
   <div class="q-pa-md">
     <div v-if="showButtons">
-      <div v-if="showContinueButton">
-        <q-btn
-          v-for="(button, index) in actionButtons"
-          :key="index"
-          :color="button.color"
-          :label="button.label"
-          @click="button.handler"
-        />
-      </div>
-      <div v-else>
-        <q-btn color="primary" label="Start Another Task" @click="startTask" />
-      </div>
+      <q-btn color="primary" label="Start Another Task" @click="startTask" />
     </div>
     <div class="q-mt-md">
       <p>Spent / Remaining: {{ formatTime(totalTime) }} / {{ formatTime(timeRemaining) }}</p>
-      <label>Next Break: </label><input size="14" />
+      <label>Next Break: </label><input :value="nextBreak" size="14" />
     </div>
   </div>
 </template>
@@ -25,16 +14,16 @@
 import { ref, onMounted } from 'vue'
 import { Notify } from 'quasar'
 
+// Debug mode flag
+const debugMode = false // Set to true to enable debug mode
+
 const totalTime = ref(0)
 const timeRemaining = ref(240) // Start with 4 minutes in seconds
 const timer = ref(null)
-const showContinueButton = ref(false)
 const showButtons = ref(true)
+const nextBreak = ref('')
 const currentSessionIndex = ref(0)
 const sessionDurations = [240, 420, 660, 1080] // Durations in seconds
-
-// Debug mode flag
-const debugMode = true // Set to true to enable debug mode
 
 // Define button configurations
 const actionButtons = [
@@ -48,30 +37,48 @@ const actionButtons = [
     color: 'primary',
     handler: startTask,
   },
+  {
+    label: 'Break',
+    color: 'red',
+    handler: startBreak,
+  },
 ]
+
+// when not started or break started, show only 'Start another task'
+// when working, show only 'Start another task'
+// when period is reached, hide all buttons, show notification with buttons
 
 let clearNotification = () => {}
 
 // On component mount, check localStorage for last break time
 onMounted(() => {})
 
+function calcNextBreak() {
+  nextBreak.value = getLocalTime(new Date(Date.now() + 45 * 60 * 1000))
+}
+
 function startTask() {
+  if (!nextBreak.value) calcNextBreak()
   clearNotification()
-  showButtons.value = true
   resetTimer()
   startTimer(sessionDurations[currentSessionIndex.value])
 }
 
 function continueTask() {
   clearNotification()
-  showButtons.value = true
   if (currentSessionIndex.value < sessionDurations.length - 1) {
     currentSessionIndex.value++
   }
   timeRemaining.value = sessionDurations[currentSessionIndex.value]
   clearInterval(timer.value)
-  showContinueButton.value = false // Hide continue button on reset
+  showButtons.value = true
   startTimer(timeRemaining.value)
+}
+
+function startBreak() {
+  clearNotification()
+  resetTimer()
+  nextBreak.value = ''
 }
 
 function startTimer() {
@@ -79,12 +86,10 @@ function startTimer() {
     () => {
       if (timeRemaining.value > 0) {
         const elapsedSeconds = debugMode ? 6 * (currentSessionIndex.value + 1) : 1 // Adjust for debug mode
-
         timeRemaining.value -= elapsedSeconds
         totalTime.value += elapsedSeconds
       } else {
         clearInterval(timer.value)
-        showContinueButton.value = true // Show continue button when time is up
         notifyEndOfPeriod()
       }
     },
@@ -110,8 +115,7 @@ function resetTimer() {
   currentSessionIndex.value = 0 // Reset to the first session
   timeRemaining.value = sessionDurations[currentSessionIndex.value] // Reset to initial session time
   clearInterval(timer.value)
-
-  showContinueButton.value = false // Hide continue button on reset
+  showButtons.value = true
 }
 
 function formatTime(seconds) {
@@ -119,6 +123,13 @@ function formatTime(seconds) {
   const secs = seconds % 60
   return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
 }
+
+const getLocalTime = (date) =>
+  new Intl.DateTimeFormat('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(date)
 </script>
 
 <style scoped>
