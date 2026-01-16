@@ -5,7 +5,8 @@
     </div>
     <div class="q-mt-md">
       <p>Spent / Remaining: {{ formatTime(totalTime) }} / {{ formatTime(timeRemaining) }}</p>
-      <label>Next Break: </label><input :value="nextBreak" size="14" />
+      <p><label>Next break: </label><input :value="nextBreak" size="14" /></p>
+      <p><label>Focus on: </label><input :value="focusOn" size="30" /></p>
     </div>
   </div>
 </template>
@@ -22,6 +23,7 @@ const timeRemaining = ref(240) // Start with 4 minutes in seconds
 const timer = ref(null)
 const showButtons = ref(true)
 const nextBreak = ref('')
+const focusOn = ref('')
 const currentSessionIndex = ref(0)
 const sessionDurations = [240, 420, 660, 1080] // Durations in seconds
 
@@ -79,6 +81,7 @@ function startBreak() {
   clearNotification()
   resetTimer()
   nextBreak.value = ''
+  focusOn.value = ''
 }
 
 function startTimer() {
