@@ -5,8 +5,8 @@
     </div>
     <div class="q-mt-md">
       <p>Spent / Remaining: {{ formatTime(totalTime) }} / {{ formatTime(timeRemaining) }}</p>
-      <p><label>Next break: </label><input :value="nextBreak" size="14" /></p>
-      <p><label>Focus on: </label><input :value="focusOn" size="30" /></p>
+      <p><label>Next break: </label><input v-model="nextBreak" size="14" /></p>
+      <p><label>Focus on: </label><input v-model="focusOn" size="30" /></p>
     </div>
   </div>
 </template>
