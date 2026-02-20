@@ -2,6 +2,13 @@
   <div class="q-pa-md">
     <div v-if="showButtons">
       <q-btn color="primary" label="Start Another Task" @click="startTask" />
+      <q-btn
+        v-if="isRunning"
+        :color="breakButtonColor"
+        :label="breakButtonLabel"
+        @click="startBreak"
+        class="q-ml-sm"
+      />
     </div>
     <div class="q-mt-md">
       <p>Spent / Remaining: {{ formatTime(totalTime) }} / {{ formatTime(timeRemaining) }}</p>
@@ -12,12 +19,21 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { Notify } from 'quasar'
 
 // Debug mode flag
 const debugMode = false // Set to true to enable debug mode
 
+const getLocalTime = (date) =>
+  new Intl.DateTimeFormat('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(date)
+
+const currentTime = ref(getLocalTime(new Date()))
+const isRunning = ref(false)
 const totalTime = ref(0)
 const timeRemaining = ref(240) // Start with 4 minutes in seconds
 const timer = ref(null)
@@ -26,6 +42,16 @@ const nextBreak = ref('')
 const focusOn = ref('')
 const currentSessionIndex = ref(0)
 const sessionDurations = [240, 420, 660, 1080] // Durations in seconds
+
+const breakButtonLabel = computed(() => {
+  if (!nextBreak.value) return 'Break'
+  return currentTime.value >= nextBreak.value ? 'Deserved break' : 'Break'
+})
+
+const breakButtonColor = computed(() => {
+  if (!nextBreak.value) return 'red'
+  return currentTime.value >= nextBreak.value ? 'green' : 'red'
+})
 
 // Define button configurations
 const actionButtons = [
@@ -85,14 +111,17 @@ function startBreak() {
 }
 
 function startTimer() {
+  isRunning.value = true
   timer.value = setInterval(
     () => {
+      currentTime.value = getLocalTime(new Date())
       if (timeRemaining.value > 0) {
-        const elapsedSeconds = debugMode ? 6 * (currentSessionIndex.value + 1) : 1 // Adjust for debug mode
+        const elapsedSeconds = debugMode ? 6 * (currentSessionIndex.value + 1) : 1
         timeRemaining.value -= elapsedSeconds
         totalTime.value += elapsedSeconds
       } else {
         clearInterval(timer.value)
+        isRunning.value = false
         notifyEndOfPeriod()
       }
     },
@@ -118,6 +147,7 @@ function resetTimer() {
   currentSessionIndex.value = 0 // Reset to the first session
   timeRemaining.value = sessionDurations[currentSessionIndex.value] // Reset to initial session time
   clearInterval(timer.value)
+  isRunning.value = false
   showButtons.value = true
 }
 
@@ -126,13 +156,6 @@ function formatTime(seconds) {
   const secs = seconds % 60
   return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
 }
-
-const getLocalTime = (date) =>
-  new Intl.DateTimeFormat('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).format(date)
 </script>
 
 <style scoped>
