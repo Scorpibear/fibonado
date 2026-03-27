@@ -4,8 +4,8 @@
       <q-btn color="primary" label="Start Another Task" @click="startTask" />
       <q-btn
         v-if="isRunning"
-        :color="breakButtonColor"
-        :label="breakButtonLabel"
+        :color="isDeservedBreak ? 'green' : 'grey'"
+        :label="isDeservedBreak ? 'Deserved break' : 'Break'"
         @click="startBreak"
         class="q-ml-sm"
       />
@@ -19,88 +19,51 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { Notify } from 'quasar'
 
-// Debug mode flag
-const debugMode = false // Set to true to enable debug mode
+const debugMode = false
 
 const getLocalTime = (date) =>
-  new Intl.DateTimeFormat('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).format(date)
+  new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }).format(
+    date,
+  )
 
+const formatTime = (seconds) =>
+  `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`
+
+// State
+const sessionDurations = [240, 420, 660, 1080]
 const currentTime = ref(getLocalTime(new Date()))
-const isRunning = ref(false)
-const totalTime = ref(0)
-const timeRemaining = ref(240) // Start with 4 minutes in seconds
 const timer = ref(null)
+const isRunning = ref(false)
 const showButtons = ref(true)
+const totalTime = ref(0)
+const timeRemaining = ref(sessionDurations[0])
+const currentSessionIndex = ref(0)
 const nextBreak = ref('')
 const focusOn = ref('')
-const currentSessionIndex = ref(0)
-const sessionDurations = [240, 420, 660, 1080] // Durations in seconds
-
-const breakButtonLabel = computed(() => {
-  if (!nextBreak.value) return 'Break'
-  return currentTime.value >= nextBreak.value ? 'Deserved break' : 'Break'
-})
-
-const breakButtonColor = computed(() => {
-  if (!nextBreak.value) return 'red'
-  return currentTime.value >= nextBreak.value ? 'green' : 'red'
-})
-
-// Define button configurations
-const actionButtons = [
-  {
-    label: 'Continue',
-    color: 'green',
-    handler: continueTask,
-  },
-  {
-    label: 'Start Another Task',
-    color: 'primary',
-    handler: startTask,
-  },
-  {
-    label: 'Break',
-    color: 'red',
-    handler: startBreak,
-  },
-]
-
-// when not started or break started, show only 'Start another task'
-// when working, show only 'Start another task'
-// when period is reached, hide all buttons, show notification with buttons
 
 let clearNotification = () => {}
 
-// On component mount, check localStorage for last break time
-onMounted(() => {})
+// Computed
+const isDeservedBreak = computed(() => nextBreak.value && currentTime.value >= nextBreak.value)
 
-function calcNextBreak() {
-  nextBreak.value = getLocalTime(new Date(Date.now() + 45 * 60 * 1000))
-}
-
+// Actions
 function startTask() {
-  if (!nextBreak.value) calcNextBreak()
+  if (!nextBreak.value) nextBreak.value = getLocalTime(new Date(Date.now() + 45 * 60 * 1000))
   clearNotification()
   resetTimer()
-  startTimer(sessionDurations[currentSessionIndex.value])
+  startTimer()
 }
 
 function continueTask() {
   clearNotification()
-  if (currentSessionIndex.value < sessionDurations.length - 1) {
-    currentSessionIndex.value++
-  }
+  if (currentSessionIndex.value < sessionDurations.length - 1) currentSessionIndex.value++
   timeRemaining.value = sessionDurations[currentSessionIndex.value]
   clearInterval(timer.value)
   showButtons.value = true
-  startTimer(timeRemaining.value)
+  startTimer()
 }
 
 function startBreak() {
@@ -116,9 +79,9 @@ function startTimer() {
     () => {
       currentTime.value = getLocalTime(new Date())
       if (timeRemaining.value > 0) {
-        const elapsedSeconds = debugMode ? 6 * (currentSessionIndex.value + 1) : 1
-        timeRemaining.value -= elapsedSeconds
-        totalTime.value += elapsedSeconds
+        const elapsed = debugMode ? 6 * (currentSessionIndex.value + 1) : 1
+        timeRemaining.value -= elapsed
+        totalTime.value += elapsed
       } else {
         clearInterval(timer.value)
         isRunning.value = false
@@ -126,35 +89,29 @@ function startTimer() {
       }
     },
     debugMode ? 100 : 1000,
-  ) // Run every second in debug mode too
+  )
 }
 
 function notifyEndOfPeriod() {
   showButtons.value = false
   clearNotification = Notify.create({
     message: 'Time is up! What would you like to do next?',
-    actions: actionButtons.map((button) => ({
-      label: button.label,
-      color: button.color,
-      handler: button.handler,
-    })),
-    timeout: 0, // Keep notification until user interacts
+    actions: [
+      { label: 'Continue', color: 'green', handler: continueTask },
+      { label: 'Start Another Task', color: 'primary', handler: startTask },
+      { label: 'Break', color: 'red', handler: startBreak },
+    ],
+    timeout: 0,
   })
 }
 
 function resetTimer() {
   totalTime.value = 0
-  currentSessionIndex.value = 0 // Reset to the first session
-  timeRemaining.value = sessionDurations[currentSessionIndex.value] // Reset to initial session time
+  currentSessionIndex.value = 0
+  timeRemaining.value = sessionDurations[0]
   clearInterval(timer.value)
   isRunning.value = false
   showButtons.value = true
-}
-
-function formatTime(seconds) {
-  const minutes = Math.floor(seconds / 60)
-  const secs = seconds % 60
-  return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
 }
 </script>
 
