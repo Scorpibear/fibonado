@@ -13,14 +13,13 @@
     <div class="q-mt-md">
       <p>Spent / Remaining: {{ formatTime(totalTime) }} / {{ formatTime(timeRemaining) }}</p>
       <p>
-        <label>Work to break: </label
-        ><select v-model="workDurationMinutes">
-          <option :value="45">45 min</option>
-          <option :value="25">25 min</option>
+        <label>Next break: </label><input v-model="nextBreak" size="14" />
+        <select v-model="workDurationMinutes">
+          <option :value="45">45 min session</option>
+          <option :value="25">25 min session</option>
         </select>
       </p>
-      <p><label>Next break: </label><input v-model="nextBreak" size="14" /></p>
-      <p><label>Focus on: </label><input v-model="focusOn" size="30" /></p>
+      <p><input v-model="focusOn" size="41" placeholder="Focus on..." /></p>
     </div>
   </div>
 </template>
@@ -128,5 +127,10 @@ function resetTimer() {
 .q-pa-md {
   max-width: 400px;
   margin: auto;
+}
+input,
+select {
+  height: 24px;
+  box-sizing: border-box;
 }
 </style>
