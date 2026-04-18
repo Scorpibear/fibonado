@@ -12,6 +12,13 @@
     </div>
     <div class="q-mt-md">
       <p>Spent / Remaining: {{ formatTime(totalTime) }} / {{ formatTime(timeRemaining) }}</p>
+      <p>
+        <label>Work to break: </label
+        ><select v-model="workDurationMinutes">
+          <option :value="45">45 min</option>
+          <option :value="25">25 min</option>
+        </select>
+      </p>
       <p><label>Next break: </label><input v-model="nextBreak" size="14" /></p>
       <p><label>Focus on: </label><input v-model="focusOn" size="30" /></p>
     </div>
@@ -22,7 +29,7 @@
 import { ref, computed } from 'vue'
 import { Notify } from 'quasar'
 
-const debugMode = false
+const debugMode = true
 
 const getLocalTime = (date) =>
   new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }).format(
@@ -33,16 +40,17 @@ const formatTime = (seconds) =>
   `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`
 
 // State
-const sessionDurations = [240, 420, 660, 1080]
+const sessionDurationMinutes = [4, 7, 11, 18]
 const currentTime = ref(getLocalTime(new Date()))
 const timer = ref(null)
 const isRunning = ref(false)
 const showButtons = ref(true)
 const totalTime = ref(0)
-const timeRemaining = ref(sessionDurations[0])
+const timeRemaining = ref(sessionDurationMinutes[0] * 60)
 const currentSessionIndex = ref(0)
 const nextBreak = ref('')
 const focusOn = ref('')
+const workDurationMinutes = ref(45)
 
 let clearNotification = () => {}
 
@@ -51,7 +59,8 @@ const isDeservedBreak = computed(() => nextBreak.value && currentTime.value >= n
 
 // Actions
 function startTask() {
-  if (!nextBreak.value) nextBreak.value = getLocalTime(new Date(Date.now() + 45 * 60 * 1000))
+  if (!nextBreak.value)
+    nextBreak.value = getLocalTime(new Date(Date.now() + workDurationMinutes.value * 60 * 1000))
   clearNotification()
   resetTimer()
   startTimer()
@@ -59,8 +68,8 @@ function startTask() {
 
 function continueTask() {
   clearNotification()
-  if (currentSessionIndex.value < sessionDurations.length - 1) currentSessionIndex.value++
-  timeRemaining.value = sessionDurations[currentSessionIndex.value]
+  if (currentSessionIndex.value < sessionDurationMinutes.length - 1) currentSessionIndex.value++
+  timeRemaining.value = sessionDurationMinutes[currentSessionIndex.value] * 60
   clearInterval(timer.value)
   showButtons.value = true
   startTimer()
@@ -108,7 +117,7 @@ function notifyEndOfPeriod() {
 function resetTimer() {
   totalTime.value = 0
   currentSessionIndex.value = 0
-  timeRemaining.value = sessionDurations[0]
+  timeRemaining.value = sessionDurationMinutes[0] * 60
   clearInterval(timer.value)
   isRunning.value = false
   showButtons.value = true
