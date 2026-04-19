@@ -11,26 +11,28 @@
       />
     </div>
     <div class="q-mt-md">
-      <p>Spent / Remaining: {{ formatTime(totalTime) }} / {{ formatTime(timeRemaining) }}</p>
-      <p>
-        <label>Next break: </label><input v-model="nextBreak" size="14" />
-        <select v-model="workDurationMinutes">
-          <option :value="45">45 min session</option>
-          <option :value="25">25 min session</option>
-        </select>
+      <p class="timer-row" @click="showSettings = !showSettings">
+        Spent / Remaining: {{ formatTime(totalTime) }} / {{ formatTime(timeRemaining) }}
+        <span class="settings-hint">⚙</span>
       </p>
-      <p>
-        <label>Scheme: </label>
-        <select v-model="selectedSchemeKey" @change="onSchemeChange">
-          <option v-for="(scheme, key) in schemes" :key="key" :value="key">{{ key }}</option>
-        </select>
-        <span class="q-ml-sm scheme-preview">
-          {{ currentSession + 1 }}/{{ sessionDurationMinutes.length }} &nbsp;({{
-            sessionDurationMinutes.join('-')
-          }})
-        </span>
-      </p>
-      <p><input v-model="focusOn" size="41" placeholder="Focus on..." /></p>
+
+      <div v-if="showSettings" class="settings-panel">
+        <p>
+          <label>Work till deserved break: </label>
+          <select v-model="workDurationMinutes">
+            <option :value="45">45 min</option>
+            <option :value="25">25 min</option>
+          </select>
+        </p>
+        <p>
+          <label>Scheme: </label>
+          <select v-model="selectedSchemeKey" @change="onSchemeChange">
+            <option v-for="(scheme, key) in schemes" :key="key" :value="key">{{ key }}</option>
+          </select>
+        </p>
+      </div>
+      <p><label>Next break: </label><input v-model="nextBreak" size="14" /></p>
+      <p><input v-model="focusOn" size="35" placeholder="Focus on..." /></p>
     </div>
   </div>
 </template>
@@ -57,10 +59,10 @@ const schemes = {
 }
 
 const selectedSchemeKey = ref('4-7-11-18')
-
 const sessionDurationMinutes = computed(() => schemes[selectedSchemeKey.value])
 
 // State
+const showSettings = ref(false)
 const currentTime = ref(getLocalTime(new Date()))
 const timer = ref(null)
 const isRunning = ref(false)
@@ -74,15 +76,10 @@ const workDurationMinutes = ref(45)
 
 let clearNotification = () => {}
 
-// Computed
 const isDeservedBreak = computed(() => nextBreak.value && currentTime.value >= nextBreak.value)
 
-// Switch scheme — reset only if not running, otherwise prompt on next reset
 function onSchemeChange() {
-  if (!isRunning.value) {
-    applySchemeReset()
-  }
-  // If running — new scheme takes effect after next break/task start
+  if (!isRunning.value) applySchemeReset()
 }
 
 function applySchemeReset() {
@@ -90,11 +87,11 @@ function applySchemeReset() {
   timeRemaining.value = sessionDurationMinutes.value[0] * 60
 }
 
-// Actions
 function startTask() {
   if (!nextBreak.value)
     nextBreak.value = getLocalTime(new Date(Date.now() + workDurationMinutes.value * 60 * 1000))
   clearNotification()
+  showSettings.value = false
   resetTimer()
   startTimer()
 }
@@ -166,6 +163,18 @@ input,
 select {
   height: 24px;
   box-sizing: border-box;
+}
+.timer-row {
+  cursor: pointer;
+  user-select: none;
+}
+.timer-row:hover {
+  opacity: 0.75;
+}
+.settings-panel {
+  border-left: 2px solid #ddd;
+  padding-left: 10px;
+  margin-bottom: 4px;
 }
 .scheme-preview {
   font-size: 0.8em;
