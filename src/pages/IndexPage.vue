@@ -19,6 +19,17 @@
           <option :value="25">25 min session</option>
         </select>
       </p>
+      <p>
+        <label>Scheme: </label>
+        <select v-model="selectedSchemeKey" @change="onSchemeChange">
+          <option v-for="(scheme, key) in schemes" :key="key" :value="key">{{ key }}</option>
+        </select>
+        <span class="q-ml-sm scheme-preview">
+          {{ currentSession + 1 }}/{{ sessionDurationMinutes.length }} &nbsp;({{
+            sessionDurationMinutes.join('-')
+          }})
+        </span>
+      </p>
       <p><input v-model="focusOn" size="41" placeholder="Focus on..." /></p>
     </div>
   </div>
@@ -38,15 +49,25 @@ const getLocalTime = (date) =>
 const formatTime = (seconds) =>
   `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`
 
+// Schemes
+const schemes = {
+  '4-7-11-18': [4, 7, 11, 18],
+  '2-3-5-8-13-21': [2, 3, 5, 8, 13, 21],
+  '5-8-12-20': [5, 8, 12, 20],
+}
+
+const selectedSchemeKey = ref('4-7-11-18')
+
+const sessionDurationMinutes = computed(() => schemes[selectedSchemeKey.value])
+
 // State
-const sessionDurationMinutes = [4, 7, 11, 18]
 const currentTime = ref(getLocalTime(new Date()))
 const timer = ref(null)
 const isRunning = ref(false)
 const showButtons = ref(true)
 const totalTime = ref(0)
-const timeRemaining = ref(sessionDurationMinutes[0] * 60)
-const currentSessionIndex = ref(0)
+const timeRemaining = ref(sessionDurationMinutes.value[0] * 60)
+const currentSession = ref(0)
 const nextBreak = ref('')
 const focusOn = ref('')
 const workDurationMinutes = ref(45)
@@ -55,6 +76,19 @@ let clearNotification = () => {}
 
 // Computed
 const isDeservedBreak = computed(() => nextBreak.value && currentTime.value >= nextBreak.value)
+
+// Switch scheme — reset only if not running, otherwise prompt on next reset
+function onSchemeChange() {
+  if (!isRunning.value) {
+    applySchemeReset()
+  }
+  // If running — new scheme takes effect after next break/task start
+}
+
+function applySchemeReset() {
+  currentSession.value = 0
+  timeRemaining.value = sessionDurationMinutes.value[0] * 60
+}
 
 // Actions
 function startTask() {
@@ -67,8 +101,8 @@ function startTask() {
 
 function continueTask() {
   clearNotification()
-  if (currentSessionIndex.value < sessionDurationMinutes.length - 1) currentSessionIndex.value++
-  timeRemaining.value = sessionDurationMinutes[currentSessionIndex.value] * 60
+  if (currentSession.value < sessionDurationMinutes.value.length - 1) currentSession.value++
+  timeRemaining.value = sessionDurationMinutes.value[currentSession.value] * 60
   clearInterval(timer.value)
   showButtons.value = true
   startTimer()
@@ -87,7 +121,7 @@ function startTimer() {
     () => {
       currentTime.value = getLocalTime(new Date())
       if (timeRemaining.value > 0) {
-        const elapsed = debugMode ? 6 * (currentSessionIndex.value + 1) : 1
+        const elapsed = debugMode ? 6 * (currentSession.value + 1) : 1
         timeRemaining.value -= elapsed
         totalTime.value += elapsed
       } else {
@@ -115,8 +149,8 @@ function notifyEndOfPeriod() {
 
 function resetTimer() {
   totalTime.value = 0
-  currentSessionIndex.value = 0
-  timeRemaining.value = sessionDurationMinutes[0] * 60
+  currentSession.value = 0
+  timeRemaining.value = sessionDurationMinutes.value[0] * 60
   clearInterval(timer.value)
   isRunning.value = false
   showButtons.value = true
@@ -132,5 +166,9 @@ input,
 select {
   height: 24px;
   box-sizing: border-box;
+}
+.scheme-preview {
+  font-size: 0.8em;
+  color: #888;
 }
 </style>
