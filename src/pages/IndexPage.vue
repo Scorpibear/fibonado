@@ -38,7 +38,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { Notify } from 'quasar'
 
 const debugMode = false
@@ -71,12 +71,33 @@ const totalTime = ref(0)
 const timeRemaining = ref(sessionDurationMinutes.value[0] * 60)
 const currentSession = ref(0)
 const nextBreak = ref('')
+const nextBreakTs = ref(null)
 const focusOn = ref('')
 const workDurationMinutes = ref(45)
 
 let clearNotification = () => {}
 
-const isDeservedBreak = computed(() => nextBreak.value && currentTime.value >= nextBreak.value)
+watch(nextBreak, (val) => {
+  if (!val) {
+    nextBreakTs.value = null
+    return
+  }
+  const [h, m] = val.split(':').map(Number)
+  if (isNaN(h) || isNaN(m)) {
+    nextBreakTs.value = null
+    return
+  }
+  const now = new Date()
+  const target = new Date(now)
+  target.setHours(h, m, 0, 0)
+  if (target <= now) target.setDate(target.getDate() + 1)
+  nextBreakTs.value = target.getTime()
+})
+
+const isDeservedBreak = computed(() => {
+  void currentTime.value
+  return nextBreakTs.value !== null && Date.now() >= nextBreakTs.value
+})
 
 function onSchemeChange() {
   if (!isRunning.value) applySchemeReset()
@@ -88,8 +109,11 @@ function applySchemeReset() {
 }
 
 function startTask() {
-  if (!nextBreak.value)
-    nextBreak.value = getLocalTime(new Date(Date.now() + workDurationMinutes.value * 60 * 1000))
+  if (!nextBreak.value) {
+    const ts = Date.now() + workDurationMinutes.value * 60 * 1000
+    nextBreakTs.value = ts
+    nextBreak.value = getLocalTime(new Date(ts))
+  }
   clearNotification()
   showSettings.value = false
   resetTimer()
@@ -109,6 +133,7 @@ function startBreak() {
   clearNotification()
   resetTimer()
   nextBreak.value = ''
+  nextBreakTs.value = null
   focusOn.value = ''
 }
 
@@ -175,9 +200,5 @@ select {
   border-left: 2px solid #ddd;
   padding-left: 10px;
   margin-bottom: 4px;
-}
-.scheme-preview {
-  font-size: 0.8em;
-  color: #888;
 }
 </style>
