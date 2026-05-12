@@ -1,14 +1,8 @@
 <template>
   <div class="q-pa-md">
     <div v-if="showButtons">
-      <q-btn color="primary" label="Start Another Task" @click="startTask" />
-      <q-btn
-        v-if="isRunning"
-        :color="isDeservedBreak ? 'green' : 'grey'"
-        :label="isDeservedBreak ? 'Deserved break' : 'Break'"
-        @click="startBreak"
-        class="q-ml-sm"
-      />
+      <q-btn v-bind="buttons.startTask" @click="startTask" />
+      <q-btn v-if="isRunning" v-bind="buttons.break" @click="startBreak" class="q-ml-sm" />
     </div>
     <div class="q-mt-md">
       <p class="timer-row" @click="showSettings = !showSettings">
@@ -99,6 +93,17 @@ const isDeservedBreak = computed(() => {
   return nextBreakTs.value !== null && Date.now() >= nextBreakTs.value
 })
 
+const buttons = computed(() => {
+  const deserved = isDeservedBreak.value
+  const breakLabel = deserved ? 'Deserved break' : 'Break'
+  return {
+    continue: { label: 'Continue', color: deserved ? 'primary' : 'green' },
+    startTask: { label: 'Start Another Task', color: deserved ? 'orange' : 'primary' },
+    break: { label: breakLabel, color: deserved ? 'green' : 'grey' },
+    breakNotify: { label: breakLabel, color: deserved ? 'green' : 'red' },
+  }
+})
+
 function onSchemeChange() {
   if (!isRunning.value) applySchemeReset()
 }
@@ -161,9 +166,9 @@ function notifyEndOfPeriod() {
   clearNotification = Notify.create({
     message: 'Time is up! What would you like to do next?',
     actions: [
-      { label: 'Continue', color: 'green', handler: continueTask },
-      { label: 'Start Another Task', color: 'primary', handler: startTask },
-      { label: 'Break', color: 'red', handler: startBreak },
+      { ...buttons.value.continue, handler: continueTask },
+      { ...buttons.value.startTask, handler: startTask },
+      { ...buttons.value.breakNotify, handler: startBreak },
     ],
     timeout: 0,
   })
