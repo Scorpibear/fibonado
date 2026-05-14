@@ -5,7 +5,11 @@
       <q-btn v-if="isRunning" v-bind="buttons.break" @click="startBreak" class="q-ml-sm" />
     </div>
     <div class="q-mt-md">
-      <p class="timer-row" @click="showSettings = !showSettings">
+      <p v-if="onBreak" class="timer-row" @click="showSettings = !showSettings">
+        Break: {{ formatTime(breakElapsed) }}
+        <span class="settings-hint">⚙</span>
+      </p>
+      <p v-else class="timer-row" @click="showSettings = !showSettings">
         Spent / Remaining: {{ formatTime(totalTime) }} / {{ formatTime(timeRemaining) }}
         <span class="settings-hint">⚙</span>
       </p>
@@ -35,7 +39,7 @@
 import { ref, computed, watch } from 'vue'
 import { Notify } from 'quasar'
 
-const debugMode = false
+const debugMode = true
 
 const getLocalTime = (date) =>
   new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }).format(
@@ -68,6 +72,9 @@ const nextBreak = ref('')
 const nextBreakTs = ref(null)
 const focusOn = ref('')
 const workDurationMinutes = ref(45)
+const onBreak = ref(false)
+const breakElapsed = ref(0)
+const breakTimer = ref(null)
 
 let clearNotification = () => {}
 
@@ -120,6 +127,8 @@ function startTask() {
     nextBreak.value = getLocalTime(new Date(ts))
   }
   clearNotification()
+  onBreak.value = false
+  clearInterval(breakTimer.value)
   showSettings.value = false
   resetTimer()
   startTimer()
@@ -140,6 +149,12 @@ function startBreak() {
   nextBreak.value = ''
   nextBreakTs.value = null
   focusOn.value = ''
+  onBreak.value = true
+  breakElapsed.value = 0
+  breakTimer.value = setInterval(() => {
+    breakElapsed.value++
+    currentTime.value = getLocalTime(new Date())
+  }, 1000)
 }
 
 function startTimer() {
